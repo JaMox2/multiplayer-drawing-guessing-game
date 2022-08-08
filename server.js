@@ -117,11 +117,13 @@ io.on('connection', (socket)=>{
     if(playerInfo.isHost){
       socket.join(room)
       createRoom(room, playerInfo, rooms)
+      io.to(room).emit('upDateChatBox', ['joined', playerInfo])
     }else{
       socket.join(room)
       let roomInfo = getCurrentRoom(playerInfo, rooms)
       addPlayerToARoom(playerInfo, rooms)
       io.to(room).emit('upDatePlayerList', playerInfo, roomInfo)
+      io.to(room).emit('upDateChatBox', ['joined', playerInfo])
     }
   })
 
@@ -135,66 +137,32 @@ io.on('connection', (socket)=>{
       removePlayerFromRoom(playerInfo, rooms)
       let roomInfo = getCurrentRoom(playerInfo, rooms)
       io.to(room).emit('upDatePlayerList', playerInfo, roomInfo)
+      io.to(room).emit('upDateChatBox', ['left', playerInfo])
       socket.leave(room)
     }
     console.log(rooms)
   })
+  socket.on('sendGuess', (msg, playerInfo)=>{
+    let room = playerInfo.room
+    io.to(room).emit('upDateChatBox', ['msg', playerInfo, msg])
+  })
+
+  socket.on('startGame', (playerInfo, playerList)=>{
+    let room = playerInfo.room
+    let playerListLength = playerList.length
+    let drawerIndex = Math.floor(Math.random() * playerListLength) + 0
+    console.log(drawerIndex)
+    if(drawerIndex > 5 || drawerIndex < 0) return
+    let roomInfo = getCurrentRoom(playerInfo, rooms).playerList
+    roomInfo[drawerIndex].isDrawing = true
+    io.to(room).emit('gameStartDrawer', roomInfo)
+    // console.log(roomInfo[drawerIndex], 'roomInfo')
+  })
+  // io.to(room).emit('upDateChatBox', ['left', playerInfo])
+  
+  
 
 
-
-
-  // socket.on('hostLeaveRoom', playerInfo=>{
-  //   let room = playerInfo.room
-  //   socket.leave(room)
-  //   let playerRoom = rooms.slice().filter(x=>x.RoomId!==room)
-  //   rooms = playerRoom
-  //   io.to(room).emit('hostLeftLeave')
-  // })
-  // socket.on('leaveRoom', playerInfo=>{
-  //   // let playerRoom = rooms.find(rooms=>rooms.RoomId === room) || []
-  //   let room = playerInfo.room
-  //   socket.leave(room)
-  // })
-
-  // socket.on('getPlayerList', (playerList)=>{
-    
-  // })
-
-  // socket.on('joinARoom', (playerList, playerInfo, setPlayerList)=>{
-  //   let player = playerList //{player}
-  //   let room = playerInfo.room
-  //   if(playerInfo.isHost){ //Is creating Private Room
-  //     io.to(room).emit('playerList', playerList)
-  //     socket.join(room)
-  //   }else{ //Is Joining Private Room
-
-  //   }
-
-  //   // console.log(playerList, playerInfo)
-  //   // let playerCopy = player.filter(x=>{
-  //   //   return playerInfo.playerName !== x.playerName
-  //   // })
-  //   // socket.join(room)
-  //   // playerCopy.push(playerInfo)
-  //   // player = playerCopy
-
-  //   // io.to(room).emit('playerList', player)
-    
-  // })
-  // socket.on('leaveRoom', (playerInfo)=>{
-  //   let room = playerInfo.room
-  //   let playerCopy = player.slice()
-  //   socket.leave(room)
-  //   if(playerInfo.isHost){
-  //     console.log('Host Left')
-  //     player = []
-  //     io.to(room).emit('didHostLeave', true, player)
-  //   }else{
-  //     console.log('Player Left')
-  //     player = playerCopy.filter(x=>x.playerName !== playerInfo.playerName)
-  //     io.to(room).emit('didHostLeave', false, player)
-  //   }
-  // })
 
 
 
